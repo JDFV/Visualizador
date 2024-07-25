@@ -1,0 +1,282 @@
+---
+title: "Violencia contra niños, niñas y adolescentes"
+output:
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    social: menu
+    source: embed
+  html_document:
+    df_print: paged
+  pdf_document: default
+runtime: shiny
+vertical_layout: fill
+resource_files:
+- "DEP-2023-SX.cpg"
+- "DEP-2023-SX.dbf"
+- "DEP-2023-SX.prj"
+- "DEP-2023-SX.sbn"
+- "DEP-2023-SX.sbx"
+- "DEP-2023-SX.shx"
+- PROV_NNA2_.cpg
+- PROV_NNA2_.dbf
+- PROV_NNA2_.prj
+- PROV_NNA2_.shx
+- Totales.cpg
+- Totales.dbf
+- Totales.prj
+- Totales.sbn
+- Totales.sbx
+- Totales.shp.xml
+- Totales.shx
+- Siseve_SEX_casos.cpg
+- Siseve_SEX_casos.dbf
+- Siseve_SEX_casos.prj
+- Siseve_SEX_casos.sbn
+- Siseve_SEX_casos.sbx
+- Siseve_SEX_casos.shx
+- DIST_NNA2_.cpg
+- DIST_NNA2_.dbf
+- DIST_NNA2_.prj
+- DIST_NNA2_.qix
+- DIST_NNA2_.shp.xml
+- DIST_NNA2_.shx
+- Distrito_MIMP_PNP.cpg
+- Distrito_MIMP_PNP.dbf
+- Distrito_MIMP_PNP.prj
+- Distrito_MIMP_PNP.sbn
+- Distrito_MIMP_PNP.sbx
+- Distrito_MIMP_PNP.shx
+- Caso_DEP_2023.cpg
+- Caso_DEP_2023.dbf
+- Caso_DEP_2023.prj
+- Caso_DEP_2023.sbn
+- Caso_DEP_2023.sbx
+- Caso_DEP_2023.shx
+- Jurisdiccion_PNP.cpg
+- Jurisdiccion_PNP.dbf
+- Jurisdiccion_PNP.prj
+- Jurisdiccion_PNP.sbn
+- Jurisdiccion_PNP.sbx
+- Jurisdiccion_PNP.shp.xml
+- Jurisdiccion_PNP.shx
+- SERV_CERCA.CPG
+- SERV_CERCA.dbf
+- SERV_CERCA.prj
+- SERV_CERCA.sbn
+- SERV_CERCA.sbx
+- SERV_CERCA.shp.xml
+- SERV_CERCA.shx
+---
+<style>
+  .navbar-inverse {
+    background-color: #DE6B72 !important;
+    border-color: #DE6B72 !important;
+  }
+
+  .navbar-inverse .navbar-brand {
+    color: white !important;
+  }
+
+  .navbar-inverse .navbar-brand:hover,
+  .navbar-inverse .navbar-brand:focus {
+    color: white !important;
+  }
+
+  .navbar-inverse .navbar-nav > li > a {
+    color: white !important;
+  }
+
+  .navbar-inverse .navbar-nav > li > a:hover,
+  .navbar-inverse .navbar-nav > li > a:focus {
+    background-color: gray !important;
+    color: white !important;
+  }
+
+  .navbar-inverse .navbar-nav > .active > a,
+  .navbar-inverse .navbar-nav > .active > a:hover,
+  .navbar-inverse .navbar-nav > .active > a:focus {
+    background-color: gray !important;
+    color: white !important;
+  }
+
+  .navbar-inverse .navbar-toggle {
+    border-color: red !important;
+  }
+
+  .navbar-inverse .navbar-toggle .icon-bar {
+    background-color: white !important;
+  }
+
+  .navbar-inverse .navbar-collapse,
+  .navbar-inverse .navbar-form {
+    border-color: white !important;
+  
+  }
+
+.storyboard-nav .sbframelist ul li.active {
+    background-color: #7D7D7D;
+    border-radius: 7px;
+    font-size: 18px;
+    
+}
+</style>
+
+### ¿Conoces algun caso de violencia contra Niños, Niñas y Adolescentes?
+```{r timelapseimport9DDD555, message=FALSE, warning=FALSE,include=FALSE}
+# Cargar las librerías necesarias
+library(shiny)
+library(leaflet)
+library(leaflet.extras)
+library(shinyjs)
+library(sf)
+library(zip)
+library(shiny)
+library(leaflet)
+library(osrm)
+library(leaflet.extras)
+library(shinyjs)
+library(sf)
+# Leer el shapefile
+shapefile_path333F <- "C:/Users/juand/OneDrive/Escritorio/MIMP/SERV_CERCA.shp"
+Jurisdiccion_PNP <- "C:/Users/juand/OneDrive/Escritorio/MIMP/Distrito_MIMP_PNP.shp"
+puntos <- st_read(shapefile_path333F)
+Distrito <- st_read(Jurisdiccion_PNP)
+```
+```{r timelEEEapseimport9DDD555, message=FALSE, warning=FALSE,include=TRUE}
+# Crear los iconos para cada tipo de punto
+icons <- awesomeIconList(
+  CEM = makeAwesomeIcon(icon = 'ios-close', iconColor = 'white', library = 'ion', markerColor = 'red'),
+  UPE = makeAwesomeIcon(icon = 'ios-close', iconColor = 'white', library = 'ion', markerColor = 'pink'),
+  SAU = makeAwesomeIcon(icon = 'ios-close', iconColor = 'white', library = 'ion', markerColor = 'purple'),
+  COMISARIA = makeAwesomeIcon(icon = 'ios-close', iconColor = 'white', library = 'ion', markerColor = 'green'),
+  `CEDIF ACERCANDONOS` = makeAwesomeIcon(icon = 'ios-close', iconColor = 'white', library = 'ion', markerColor = 'orange')
+)
+logo_path <- "https://upload.wikimedia.org/wikipedia/commons/c/ca/PCM-MIMP.png"
+
+# Define la UI
+ui <- fluidPage(
+  useShinyjs(),
+  tags$head(
+    tags$script(HTML("
+      $(document).ready(function() {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          Shiny.onInputChange('geolocation', {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        });
+      });
+    ")),
+    tags$style(HTML("
+      .custom-text {
+        background-color: #7D7D7D;
+        color: white;
+        border-radius: 7px;
+        text-align: center;
+        font-size: 18px;
+        padding: 10px;
+        margin: 15px 0;
+      }
+      .custom-button {
+        background-color: white;
+        color: #7D7D7D;
+        border: 2px solid #7D7D7D;
+        border-radius: 7px;
+        padding: 6px 12px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .custom-button:hover {
+        background-color: #117BFA;
+        color: white;
+      }
+    "))
+  ),
+  div(
+    class = "custom-text", 
+    "Si conoces un caso de Violencia contra Niños, Niñas y Adolescentes Denúncialo, conoce la ubicación de los centros de atención más cercanos a tí en el siguiente mapa.",
+    a(href = "https://chat100.aurora.gob.pe/", target = "_blank", class = "custom-button", 
+      "¿No puedes acercarte presencialmente? Conversa de manera anónima con un profesional")
+  ),
+  leafletOutput("map", height = "90vh"),
+  downloadButton("downloadCSV", "Obtener CSV"),
+  actionButton("calc_isochrone", "¿Qué Centros de atención son cercanos a mi ubicación?",style = "background-color: #F14E36; color: white; border-radius: 7px; text-align: center; font-size: 18px; max-width: 5500px; margin-top: 15px; margin-bottom:15px")
+)
+# Server
+server <- function(input, output, session) {
+  output$map <- renderLeaflet({
+    leaflet(puntos) %>%
+      addTiles(urlTemplate = 'https://tile.jawg.io/jawg-streets/{z}/{x}/{y}{r}.png?access-token={accessToken}', 
+               options = tileOptions(
+                 attribution = '<a href="https://jawg.io" title="Tiles Courtesy of Jawg Maps" target="_blank">&copy; <b>Jawg</b>Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                 minZoom = 0,
+                 maxZoom = 22,
+                 accessToken = 'cOEBOw96dmDvOP487yl4C3twg1Fwzntl3YKRPi3oc93USS0ESqC8KgyHOsxhrLU2')) %>%
+      setView(lng = -77.034792, lat = -12.048408, zoom = 18) %>%
+      addControlGPS(
+        options = gpsOptions(
+          position = "topleft",
+          activate = TRUE, 
+          autoCenter = TRUE,
+          setView = TRUE,
+          maxZoom = 14)) %>%
+      addAwesomeMarkers(
+        lng = ~x,
+        lat = ~y,
+        icon = ~icons[TIPO],
+        popup = ~paste0("<b>TIPO:</b> ", TIPO, "<br/><b>Direccion:</b> ", ifelse(is.na(Direccion) | Direccion == "", "No disponible", Direccion)),
+        label = ~TIPO,
+        group = "Puntos"
+      ) %>%
+      addPolygons(data = Distrito, color = "black", weight = 1, opacity = 0.5, group = "Distritos",
+                  popup = ~paste0("<b>Distrito:</b> ", NOMBDIST)) %>%
+      addLayersControl(
+        overlayGroups = c("Puntos", "Distritos","Centros de atención próximos a tu ubicación"),
+        options = layersControlOptions(collapsed = FALSE)
+      ) %>%
+      addLegend(
+        position = "bottomright",
+        colors = c("red", "pink", "purple", "orange", "green"),
+        labels = c("CEM", "UPE", "SAU", "CEDIF ACERCANDONOS", "COMISARIA"),
+        title = "Tipo de Servicio",
+        opacity = 1
+      ) %>%
+      addControl(
+        html = paste0('<img src="', logo_path, '" style="width:300px; height:70px;">'),
+        position = "bottomleft",
+        className = "leaflet-control-layers"
+      ) %>%
+      hideGroup("Distritos")  # Ocultar el grupo "Distritos" inicialmente
+  })
+  
+  observeEvent(input$geolocation, {
+    leafletProxy("map") %>%
+      setView(lng = input$geolocation$lng, lat = input$geolocation$lat, zoom = 14) %>%
+      addMarkers(lng = input$geolocation$lng, lat = input$geolocation$lat, popup = "Usted está aquí")
+  })
+
+  observeEvent(input$calc_isochrone, {
+    user_location <- input$geolocation
+    if (is.null(user_location)) {
+      showNotification("Activa el GPS de tu equipo")
+    } else {
+      isochrone <- osrmIsochrone(loc = c(user_location$lng, user_location$lat), breaks = seq(0, 10, by = 10))
+      leafletProxy("map") %>%
+        addPolygons(data = isochrone, color = "cyan", weight = 2, opacity = 0.5, fillOpacity = 0.2, group = "Centros de atención próximos a tu ubicación",
+                    popup = "10 minutos en auto")
+    }
+  })
+
+  output$downloadCSV <- downloadHandler(
+    filename = function() {
+      paste("puntos", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(st_drop_geometry(puntos), file)
+    }
+  )
+}
+
+# Ejecutar la aplicación Shiny
+shinyApp(ui = ui, server = server)
+```
